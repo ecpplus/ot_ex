@@ -61,12 +61,15 @@ defmodule OT.Text.Application do
   defp do_apply(text, [%{d: del} | op], result) do
     {deleted, text} = String.split_at(text, String.length(del))
 
-    if del == deleted do
-      text
-      |> do_apply(op, result)
-    else
-      {:error, :delete_mismatch}
-    end
+    text
+    |> do_apply(op, result)
+
+    # if del == deleted do
+      # text
+      # |> do_apply(op, result)
+    # else
+      # {:error, :delete_mismatch}
+    # end
   end
 
   defp do_apply(text, [%{i: ins} | op], result) do

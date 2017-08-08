@@ -98,6 +98,7 @@ defmodule OT.Text.Component do
   def type(comp) when is_integer(comp), do: :retain
   def type(%{d: _}), do: :delete
   def type(%{i: _}), do: :insert
+  def type(_), do: nil
 
   @doc """
   Compare the length of two components.
