@@ -28,7 +28,7 @@ defmodule OT.Text.TransformationTest do
     assert Transformation.transform([%{i: "apple"}, %{d: "le"}], [%{i: "orange"}, %{d: "ge"}]) == [[%{i: "apple"}, 6], [5, %{i: "orange"}]]
   end
 
-  test "transform insert->delete->insert" do
-    assert Transformation.transform([3, %{d: "le"}, %{i: "LE JUICE"}], [4, %{d: "e"}, %{i: "GES"}]) == [[%{i: "appLE JUICE"}, 9], [13, %{i: "oranGES"}]]
+  test "transform retain->delete->insert" do
+    assert Transformation.transform([5, %{d: "le"}, %{i: "LE JUICE"}], [5, %{d: "le"}, %{i: "GES"}]) == [[5, %{i: "LE JUICE"}, 3], [5, 8, %{i: "GES"}]]
   end
 end

@@ -31,217 +31,143 @@ defmodule OT.Text.Transformation do
     |> do_transform(side)
   end
 
-  def transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) do
-    # At every iteration of the loop, the imaginary cursor that both
-    # operation1 and operation2 have that operates on the input string must
-    # have the same position in the input string.
+  defp transform_loop(op1s, op2s, nil, nil, operation1Prime, operation2Prime, op1_position, op2_position) do
+    [operation1Prime, operation2Prime]
+  end
 
+  # op1 == :insert
+  defp transform_loop(op1s, op2s, op1=%{i: _}, op2, operation1Prime, operation2Prime, op1_position, op2_position) do
+    operation1Prime = List.insert_at(operation1Prime, -1, op1)
+    operation2Prime = List.insert_at(operation2Prime, -1, Component.length(op1))
+    op1_position = op1_position + 1
+    op1 = Enum.at(op1s, op1_position)
+    transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
 
-    # minl = nil
+  # op2 == :insert
+  defp transform_loop(op1s, op2s, op1, op2=%{i: _}, operation1Prime, operation2Prime, op1_position, op2_position) do
+    operation1Prime = List.insert_at(operation1Prime, -1, Component.length(op2))
+    operation2Prime = List.insert_at(operation2Prime, -1, op2)
+    op2_position = op2_position + 1
+    op2 = Enum.at(op2s, op2_position)
+    transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
 
-    # next two cases: one or both ops are insert ops
-    # => insert the string in the corresponding prime operation, skip it in
-    # the other one. If both op1 and op2 are insert ops, prefer op1.
-    Logger.debug("[loop] op1: #{inspect op1}, op2: #{inspect op2}")
-    Logger.debug("#{inspect operation1Prime}, #{inspect operation2Prime}")
-
-    cond do
-      op1 == nil && op2 == nil ->
-        # end condition: both ops1 and ops2 have been processed
-        # Somehow return
-        [operation1Prime, operation2Prime]
-      Component.type(op1) == :insert ->
-        operation1Prime = List.insert_at(operation1Prime, -1, op1)
-        operation2Prime = List.insert_at(operation2Prime, -1, Component.length(op1))
+  # op1: retain, op2: retain
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) do
+    [minl, op1, op2, op1_position, op2_position] = cond do
+      Component.length(op1) > Component.length(op2) ->
+        minl = op2
+        op1  = op1 - op2
+        op2_position = op2_position + 1
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      Component.length(op1) == Component.length(op2) ->
+        minl = op2
+        op1_position = op1_position + 1
+        op2_position = op2_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      true ->
+        minl = op1
+        op2  = op2 - op1
         op1_position = op1_position + 1
         op1 = Enum.at(op1s, op1_position)
-        transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-      Component.type(op2) == :insert ->
-        operation1Prime = List.insert_at(operation1Prime, -1, Component.length(op2))
-        operation2Prime = List.insert_at(operation2Prime, -1, op2)
+        [minl, op1, op2, op1_position, op2_position]
+    end
+
+    operation1Prime = List.insert_at(operation1Prime, -1, minl)
+    operation2Prime = List.insert_at(operation2Prime, -1, minl)
+    transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
+
+  # op1: delete, op2: delete
+  defp transform_loop(op1s, op2s, op1=%{d: _}, op2=%{d: _}, operation1Prime, operation2Prime, op1_position, op2_position) do
+    cond do
+      Component.length(op1) > Component.length(op2) ->
+        op1 = %{d: String.slice(op1.d, Component.length(op2)..-1)}
         op2_position = op2_position + 1
         op2 = Enum.at(op2s, op2_position)
         transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-      op1 == nil || op2 == nil ->
-        Logger.error("Cannot transform operations: first operation is too short. op1: #{inspect op1}, op2: #{inspect op2}")
-        raise 'Cannot transform operations: first operation is too short.'
-      Component.type(op1) == :retain && Component.type(op2) == :retain ->
-        # Simple case: retain/retain
-        cond do
-          Component.length(op1) > Component.length(op2) ->
-            minl = op2
-            op1  = op1 - op2
-            # ^op2 = ops2[i2 += 1]
-            op2_position = op2_position + 1
-            op2 = Enum.at(op2s, op2_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, minl)
-            operation2Prime = List.insert_at(operation2Prime, -1, minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          Component.length(op1) == Component.length(op2) ->
-            minl = op2
-            # ^op1 = ops1[i1 += 1]
-            # ^op2 = ops2[i2 += 1]
-            op1_position = op1_position + 1
-            op2_position = op2_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            op2 = Enum.at(op2s, op2_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, minl)
-            operation2Prime = List.insert_at(operation2Prime, -1, minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          true ->
-            minl = op1
-            op2  = op2 - op1
-            # ^op1 = ops1[i1 += 1]
-            op1_position = op1_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, minl)
-            operation2Prime = List.insert_at(operation2Prime, -1, minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-        end
-
-        # List.insert_at(operation1Prime, -1, minl)
-        # List.insert_at(operation2Prime, -1, minl)
-        # transform_loop(op1s, op2s, operation1Prime, operation2Prime, op1_position, op2_position + 1)
-      Component.type(op1) == :delete && Component.type(op2) == :delete ->
-        Logger.debug("both are delete")
-        # Both operations delete the same string at the same position. We don't
-        # need to produce any operations, we just skip over the delete ops and
-        # handle the case that one operation deletes more than the other.
-        cond do
-          Component.length(op1) > Component.length(op2) ->
-            # new_length = Component.length(op1) - Component.length(op2)
-            op1 = %{d: String.slice(op1.d, Component.length(op2)..-1)}
-            # ^op2 = ops2[i2 += 1]
-            op2_position = op2_position + 1
-            op2 = Enum.at(op2s, op2_position)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          Component.length(op1) == Component.length(op2) ->
-            # op1 = ops1[i1 += 1]
-            # op2 = ops2[i2 += 1]
-            op1_position = op1_position + 1
-            op2_position = op2_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            op2 = Enum.at(op2s, op2_position)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          true ->
-            # op2 = op2 - op1
-            op2 = %{d: String.slice(op2.d, Component.length(op1)..-1)}
-            # op1 = ops1[i1 += 1]
-            op1_position = op1_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-        end
-        # next two cases: delete/retain and retain/delete
-      Component.type(op1) == :delete && Component.type(op2) == :retain ->
-        cond do
-          Component.length(op1) > Component.length(op2) ->
-            # minl = op2
-            minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
-            # op1  = op1 + op2
-            # 元の文字を記憶していないといけないため、ダミーで入れる
-            # op1 = %{d: String.duplicate("a", Component.length(op2)) <> op1.d}
-            op1 = minl
-            # op2 = ops2[i2 += 1]
-            op2_position = op2_position + 1
-            op2 = Enum.at(op2s, op2_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          Component.length(op1) == Component.length(op2) ->
-            minl = op2
-            op1_position = op1_position + 1
-            op2_position = op2_position + 1
-            # op1 = ops1[i1 += 1]
-            # op2 = ops2[i2 += 1]
-            op1 = Enum.at(op1s, op1_position)
-            op2 = Enum.at(op2s, op2_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, -minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          true ->
-            Logger.debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-            # minl = -op1
-            minl = op1
-            op2  = op2 - Comopnent.length(op1)
-            op1_position = op1_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            # operation1Prime = List.insert_at(operation1Prime, -1, -minl)
-            operation1Prime = List.insert_at(operation1Prime, -1, minl)
-            # op1 = ops1[i1 += 1]
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-        end
-
-        # operation1Prime.delete(minl)
-
-      Component.type(op1) == :retain && Component.type(op2) == :delete ->
-        cond do
-          Component.length(op1) > Component.length(op2) ->
-            minl = -op2
-            op1  = op1 + op2
-            # op2 = ops2[i2 += 1]
-            op2_position = op2_position + 1
-            op2 = Enum.at(op2s, op2_position)
-            operation2Prime = List.insert_at(operation2Prime, -1, -minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          Component.length(op1) == Component.length(op2) ->
-            minl = op1
-            op1_position = op1_position + 1
-            op2_position = op2_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            op2 = Enum.at(op2s, op2_position)
-            # op1 = ops1[i1 += 1]
-            # op2 = ops2[i2 += 1]
-            operation2Prime = List.insert_at(operation2Prime, -1, -minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          true ->
-            minl = op1
-            # op2  = op2 + op1
-            # 元の文字を記憶していないといけないため、ダミーで入れる
-            op2 = %{d: String.duplicate("a", Component.length(op1)) <> op2.d}
-            # op1 = ops1[i1 += 1]
-            op1_position = op1_position + 1
-            op1 = Enum.at(op1s, op1_position)
-            operation2Prime = List.insert_at(operation2Prime, -1, -minl)
-            transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-        end
+      Component.length(op1) == Component.length(op2) ->
+        op1_position = op1_position + 1
+        op2_position = op2_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        op2 = Enum.at(op2s, op2_position)
+        transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
       true ->
-        raise "The two operations aren't compatible"
+        op2 = %{d: String.slice(op2.d, Component.length(op1)..-1)}
+        op1_position = op1_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
     end
-    # transform_loop(op1s, op2s, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
+
+  # op1: delete, op2: retain
+  defp transform_loop(op1s, op2s, op1=%{d: _}, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op2) do
+    [minl, op1, op2, op1_posision, op2_position] = cond do
+      Component.length(op1) > Component.length(op2) ->
+        minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
+        op1  = %{d: String.slice(op1.d, -(Component.length(op1) - Component.length(op2))..-1)}
+        op2_position = op2_position + 1
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      Component.length(op1) == Component.length(op2) ->
+        minl = op1
+        op1_position = op1_position + 1
+        op2_position = op2_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      true ->
+        minl = op1
+        op2  = op2 - Comopnent.length(op1)
+        op1_position = op1_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        [minl, op1, op2, op1_position, op2_position]
+    end
+    operation1Prime = List.insert_at(operation1Prime, -1, minl)
+    transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
+
+  # op1: retain, op2: delete
+  defp transform_loop(op1s, op2s, op1, op2=%{d: _}, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) do
+    [minl, op1, op2, op1_posision, op2_position] = cond do
+      Component.length(op1) > Component.length(op2) ->
+        minl = op2
+        op1  = op1 - Component.length(op2)
+        op2_position = op2_position + 1
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      Component.length(op1) == Component.length(op2) ->
+        minl = op2
+        op1_position = op1_position + 1
+        op2_position = op2_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        op2 = Enum.at(op2s, op2_position)
+        [minl, op1, op2, op1_position, op2_position]
+      true ->
+        minl = %{d: String.slice(op2.d, -Component.length(op1)..-1)}
+        op2  = %{d: String.slice(op2.d, -(Component.length(op2) - Component.length(op1))..-1)}
+        op1_position = op1_position + 1
+        op1 = Enum.at(op1s, op1_position)
+        [minl, op1, op2, op1_position, op2_position]
+    end
+    operation2Prime = List.insert_at(operation2Prime, -1, minl)
+    transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+  end
+
+  # Unexpected condition
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) do
+    raise "The two operations aren't compatible or "
   end
 
   @spec transform(Operation.t, Operation.t, OT.Type.side) :: Operation.t
   def transform(op1s, op2s) do
-    # {op1s, op2s}
-    # |> next
-    # |> do_transform(side)
-
-
-
-    # if (op1s.base_length != op2s.base_length)
-    # fail 'Both operations have to have the same base length'
-    # end
-
-    # operation1Prime = []
-    # operation2Prime = []
-
-    # ^ops1 = op1s
-    # ^ops2 = op2s
-
-    # i1 = 0
-    # i2 = 0
-
-    # op1 = Enum.at(ops1, i1)
-    # op2 = Enum.at(ops2, i2)
-
-    # TODO: loop を実装すること
-    op1_position = 0
-    op2_position = 0
-    op1 = Enum.at(op1s, op1_position)
-    op2 = Enum.at(op2s, op2_position)
-
-    Logger.debug("[loop start] op1s: #{inspect op1s}, op2s: #{inspect op2s}")
-    operation_primes = transform_loop(op1s, op2s, op1, op2, [], [], op1_position, op2_position)
-    Logger.debug("[loop finish] #{inspect operation_primes}")
-    operation_primes
+    op1 = Enum.at(op1s, 0)
+    op2 = Enum.at(op2s, 0)
+    transform_loop(op1s, op2s, op1, op2, [], [], 0, 0)
   end
 
   @spec do_transform(Scanner.output, OT.Type.side, Operation.t) :: Operation.t
