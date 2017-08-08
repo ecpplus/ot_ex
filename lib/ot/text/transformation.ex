@@ -83,10 +83,11 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: delete, op2: delete
-  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and op1 < 0 and op2 < 0 do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+      when is_integer(op1) and is_integer(op2) and op1 < 0 and op2 < 0 do
     cond do
       Component.length(op1) > Component.length(op2) ->
-        op1 = %{d: String.slice(op1.d, Component.length(op2)..-1)}
+        op1 = op1 - op2
         op2_position = op2_position + 1
         op2 = Enum.at(op2s, op2_position)
         transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
@@ -97,7 +98,7 @@ defmodule OT.Text.Transformation do
         op2 = Enum.at(op2s, op2_position)
         transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
       true ->
-        op2 = %{d: String.slice(op2.d, Component.length(op1)..-1)}
+        op2 = op2 - op1
         op1_position = op1_position + 1
         op1 = Enum.at(op1s, op1_position)
         transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
@@ -105,61 +106,64 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: delete, op2: retain
-  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and op1 < 0 and 0 <= op2 do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+      when is_integer(op1) and is_integer(op2) and op1 < 0 and 0 <= op2 do
     [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
-        minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
-        op1  = %{d: String.slice(op1.d, -(Component.length(op1) - Component.length(op2))..-1)}
+        minl = op2
+        op1  = op1 + op2
         op2_position = op2_position + 1
         op2 = Enum.at(op2s, op2_position)
         [minl, op1, op2, op1_position, op2_position]
       Component.length(op1) == Component.length(op2) ->
-        minl = op1
+        minl = op2
         op1_position = op1_position + 1
         op2_position = op2_position + 1
         op1 = Enum.at(op1s, op1_position)
         op2 = Enum.at(op2s, op2_position)
         [minl, op1, op2, op1_position, op2_position]
       true ->
-        minl = op1
-        op2  = op2 - Component.length(op1)
+        minl = -op1
+        op2  = op2 + op1
         op1_position = op1_position + 1
         op1 = Enum.at(op1s, op1_position)
         [minl, op1, op2, op1_position, op2_position]
     end
-    operation1Prime = List.insert_at(operation1Prime, -1, minl)
+    operation1Prime = List.insert_at(operation1Prime, -1, -minl)
     transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
   end
 
   # op1: retain, op2: delete
-  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and 0 <= op1 and op2 < 0 do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
+      when is_integer(op1) and is_integer(op2) and 0 <= op1 and op2 < 0 do
     [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
-        minl = op2
-        op1  = op1 - Component.length(op2)
+        minl = -op2
+        op1  = op1 + op2
         op2_position = op2_position + 1
         op2 = Enum.at(op2s, op2_position)
         [minl, op1, op2, op1_position, op2_position]
       Component.length(op1) == Component.length(op2) ->
-        minl = op2
+        minl = op1
         op1_position = op1_position + 1
         op2_position = op2_position + 1
         op1 = Enum.at(op1s, op1_position)
         op2 = Enum.at(op2s, op2_position)
         [minl, op1, op2, op1_position, op2_position]
       true ->
-        minl = %{d: String.slice(op2.d, -Component.length(op1)..-1)}
-        op2  = %{d: String.slice(op2.d, -(Component.length(op2) - Component.length(op1))..-1)}
+        minl = op1
+        op2  = op2 + op1
         op1_position = op1_position + 1
         op1 = Enum.at(op1s, op1_position)
         [minl, op1, op2, op1_position, op2_position]
     end
-    operation2Prime = List.insert_at(operation2Prime, -1, minl)
+    operation2Prime = List.insert_at(operation2Prime, -1, -minl)
     transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
   end
 
   # Unexpected condition
-  defp transform_loop(_, _, _, _, _, _, _, _) do
+  defp transform_loop(op1s, op2s, op1, op2, _, _, _, _) do
+    Logger.debug("INVALID op1s: #{inspect op1s}, op2s: #{inspect op2s}, op1: #{inspect op1}, op2: #{inspect op2}")
     raise "The two operations aren't compatible or "
   end
 
