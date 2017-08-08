@@ -68,7 +68,7 @@ defmodule OT.Text.Transformation do
       Component.type(op1) == :retain && Component.type(op2) == :retain ->
         # Simple case: retain/retain
         cond do
-          op1 > op2 ->
+          Component.length(op1) > Component.length(op2) ->
             minl = op2
             op1  = op1 - op2
             # ^op2 = ops2[i2 += 1]
@@ -77,7 +77,7 @@ defmodule OT.Text.Transformation do
             operation1Prime = List.insert_at(operation1Prime, -1, minl)
             operation2Prime = List.insert_at(operation2Prime, -1, minl)
             transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
-          op1 == op2 ->
+          Component.length(op1) == Component.length(op2) ->
             minl = op2
             # ^op1 = ops1[i1 += 1]
             # ^op2 = ops2[i2 += 1]
@@ -135,14 +135,16 @@ defmodule OT.Text.Transformation do
       Component.type(op1) == :delete && Component.type(op2) == :retain ->
         cond do
           Component.length(op1) > Component.length(op2) ->
-            minl = op2
+            # minl = op2
+            minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
             # op1  = op1 + op2
             # 元の文字を記憶していないといけないため、ダミーで入れる
-            op1 = %{d: String.duplicate("a", Component.length(op2)) <> op1.d}
+            # op1 = %{d: String.duplicate("a", Component.length(op2)) <> op1.d}
+            op1 = minl
             # op2 = ops2[i2 += 1]
             op2_position = op2_position + 1
             op2 = Enum.at(op2s, op2_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, -minl)
+            operation1Prime = List.insert_at(operation1Prime, -1, minl)
             transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
           Component.length(op1) == Component.length(op2) ->
             minl = op2
@@ -155,11 +157,14 @@ defmodule OT.Text.Transformation do
             operation1Prime = List.insert_at(operation1Prime, -1, -minl)
             transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
           true ->
-            minl = -op1
-            op2  = op2 + Comopnent.length(op1)
+            Logger.debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+            # minl = -op1
+            minl = op1
+            op2  = op2 - Comopnent.length(op1)
             op1_position = op1_position + 1
             op1 = Enum.at(op1s, op1_position)
-            operation1Prime = List.insert_at(operation1Prime, -1, -minl)
+            # operation1Prime = List.insert_at(operation1Prime, -1, -minl)
+            operation1Prime = List.insert_at(operation1Prime, -1, minl)
             # op1 = ops1[i1 += 1]
             transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
         end
@@ -188,7 +193,7 @@ defmodule OT.Text.Transformation do
             transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position)
           true ->
             minl = op1
-            op2  = op2 + op1
+            # op2  = op2 + op1
             # 元の文字を記憶していないといけないため、ダミーで入れる
             op2 = %{d: String.duplicate("a", Component.length(op1)) <> op2.d}
             # op1 = ops1[i1 += 1]
