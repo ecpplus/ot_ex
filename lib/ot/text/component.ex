@@ -5,8 +5,8 @@ defmodule OT.Text.Component do
   A component represents a retain or modification of the text:
 
   - `5`:            Retain 5 characters of the text
+  - `-5`:           Delete 5 characters of the text
   - `%{i:"Hello"}`: Insert the string "Hello"
-  - `%{d:"World"}`: Delete the string "World"
   """
 
   alias OT.Text
@@ -16,7 +16,7 @@ defmodule OT.Text.Component do
   A delete component, in which a string of zero or more characters are deleted
   from the text
   """
-  @type delete :: %{d: Text.datum}
+  @type delete :: neg_integer
 
   @typedoc """
   An insert component, in which a string of zero or more characters are inserted
@@ -51,18 +51,17 @@ defmodule OT.Text.Component do
   ## Examples
 
       iex> OT.Text.Component.invert(%{i: "Foo"})
-      %{d: "Foo"}
+      -3
 
-      iex> OT.Text.Component.invert(%{d: "Foo"})
-      %{i: "Foo"}
+      iex> OT.Text.Component.invert(-3)
+      3
 
       iex> OT.Text.Component.invert(4)
-      4
+      -4
   """
   @spec invert(t) :: t
-  def invert(comp) when is_integer(comp), do: comp
-  def invert(%{d: del}), do: %{i: del}
-  def invert(%{i: ins}), do: %{d: ins}
+  def invert(comp) when is_integer(comp), do: -comp
+  def invert(%{i: ins}), do: -String.length(ins)
 
   @doc """
   Determine the length of a component.
@@ -76,8 +75,7 @@ defmodule OT.Text.Component do
       3
   """
   @spec length(t) :: non_neg_integer
-  def length(comp) when is_integer(comp), do: comp
-  def length(%{d: del}), do: String.length(del)
+  def length(comp) when is_integer(comp), do: abs(comp)
   def length(%{i: ins}), do: String.length(ins)
 
   @doc """
@@ -91,14 +89,14 @@ defmodule OT.Text.Component do
       iex> OT.Text.Component.type(%{i: "Foo"})
       :insert
 
-      iex> OT.Text.Component.type(%{d: "Foo"})
+      iex> OT.Text.Component.type(-3)
       :delete
   """
   @spec type(t) :: type
-  def type(comp) when is_integer(comp), do: :retain
-  def type(%{d: _}), do: :delete
-  def type(%{i: _}), do: :insert
-  def type(_), do: nil
+  def type(ret) when is_integer(ret) and 0 <= ret, do: :retain
+  def type(del) when is_integer(del) and del < 0,  do: :delete
+  def type(%{i: _}),                               do: :insert
+  def type(_),                                     do: nil
 
   @doc """
   Compare the length of two components.
@@ -138,8 +136,6 @@ defmodule OT.Text.Component do
     do: [retain_a + retain_b]
   def join(%{i: ins_a}, %{i: ins_b}),
     do: [%{i: ins_a <> ins_b}]
-  def join(%{d: del_a}, %{d: del_b}),
-    do: [%{d: del_a <> del_b}]
   def join(comp_a, comp_b),
     do: [comp_a, comp_b]
 
@@ -156,7 +152,6 @@ defmodule OT.Text.Component do
   """
   @spec no_op?(t) :: boolean
   def no_op?(0), do: true
-  def no_op?(%{d: ""}), do: true
   def no_op?(%{i: ""}), do: true
   def no_op?(_), do: false
 
@@ -175,13 +170,12 @@ defmodule OT.Text.Component do
       {%{i: "Fo"}, %{i: "o"}}
   """
   @spec split(t, non_neg_integer) :: {t, t}
-  def split(comp, index) when is_integer(comp) do
+  def split(comp, index) when is_integer(comp) and 0 <= comp do
     {index, comp - index}
   end
 
-  def split(%{d: del}, index) do
-    {%{d: String.slice(del, 0, index)},
-     %{d: String.slice(del, index..-1)}}
+  def split(comp, index) when is_integer(comp) and comp < 0 do
+    {-index, comp + index}
   end
 
   def split(%{i: ins}, index) do
@@ -195,7 +189,7 @@ defmodule OT.Text.Component do
 
   @spec do_random(type, Text.datum) :: t
   defp do_random(:delete, text),
-    do: %{d: text}
+    do: -String.length(text)
   defp do_random(:insert, _text),
     do: %{i: Text.init_random(:rand.uniform(16))}
   defp do_random(:retain, text),

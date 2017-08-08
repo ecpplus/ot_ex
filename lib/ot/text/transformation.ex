@@ -54,7 +54,7 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: retain, op2: retain
-  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and 0 <= op1 and 0 <= op2 do
     [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
         minl = op2
@@ -83,7 +83,7 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: delete, op2: delete
-  defp transform_loop(op1s, op2s, op1=%{d: _}, op2=%{d: _}, operation1Prime, operation2Prime, op1_position, op2_position) do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and op1 < 0 and op2 < 0 do
     cond do
       Component.length(op1) > Component.length(op2) ->
         op1 = %{d: String.slice(op1.d, Component.length(op2)..-1)}
@@ -105,7 +105,7 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: delete, op2: retain
-  defp transform_loop(op1s, op2s, op1=%{d: _}, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op2) do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and op1 < 0 and 0 <= op2 do
     [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
         minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
@@ -132,7 +132,7 @@ defmodule OT.Text.Transformation do
   end
 
   # op1: retain, op2: delete
-  defp transform_loop(op1s, op2s, op1, op2=%{d: _}, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) do
+  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) and is_integer(op2) and 0 <= op1 and op2 < 0 do
     [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
         minl = op2

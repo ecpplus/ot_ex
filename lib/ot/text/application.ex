@@ -27,8 +27,8 @@ defmodule OT.Text.Application do
       iex> OT.Text.Application.apply("Foo", [3, %{i: " Bar"}])
       {:ok, "Foo Bar"}
 
-      iex> OT.Text.Application.apply("Foo", [%{d: "Foos"}])
-      {:error, :delete_mismatch}
+      iex> OT.Text.Application.apply("Foo", [-4])
+      {:error, :delete_too_long}
 
   ## Errors
 
@@ -58,26 +58,12 @@ defmodule OT.Text.Application do
     {:ok, result <> text}
   end
 
-  defp do_apply(text, [%{d: del} | op], result) do
-    {_, text} = String.split_at(text, String.length(del))
-
-    text
-    |> do_apply(op, result)
-
-    # if del == deleted do
-      # text
-      # |> do_apply(op, result)
-    # else
-      # {:error, :delete_mismatch}
-    # end
-  end
-
   defp do_apply(text, [%{i: ins} | op], result) do
     text
     |> do_apply(op, result <> ins)
   end
 
-  defp do_apply(text, [ret | op], result) when is_integer(ret) do
+  defp do_apply(text, [ret | op], result) when is_integer(ret) and 0 <= ret do
     if ret <= String.length(text) do
       {retained, text} = String.split_at(text, ret)
 
@@ -85,6 +71,17 @@ defmodule OT.Text.Application do
       |> do_apply(op, result <> retained)
     else
       {:error, :retain_too_long}
+    end
+  end
+
+  defp do_apply(text, [del | op], result) when is_integer(del) and del < 0 do
+    if abs(del) <= String.length(text) do
+      {_, text} = String.split_at(text, -del)
+
+      text
+      |> do_apply(op, result)
+    else
+      {:error, :delete_too_long}
     end
   end
 end

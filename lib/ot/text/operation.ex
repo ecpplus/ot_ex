@@ -39,7 +39,7 @@ defmodule OT.Text.Operation do
   ## Example
 
       iex> OT.Text.Operation.invert([4, %{i: "Foo"}])
-      [4, %{d: "Foo"}]
+      [-4, -3]
   """
   @spec invert(t) :: t
   def invert(op), do: Enum.map(op, &Component.invert/1)

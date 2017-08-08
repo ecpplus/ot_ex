@@ -46,8 +46,8 @@ defmodule OT.Text.Scanner do
       iex> OT.Text.Scanner.next({[%{i: "Foo"}], [2]}, :insert)
       {{%{i: "Foo"}, []}, {2, []}}
 
-      iex> OT.Text.Scanner.next({[%{d: "Foo"}], [2]})
-      {{%{d: "Fo"}, [%{d: "o"}]}, {2, []}}
+      iex> OT.Text.Scanner.next({[-3], [2]})
+      {{-2, [-1]}, {2, []}}
   """
   @spec next(input, skip_type) :: output
   def next(input, skip_type \\ nil)

@@ -7,21 +7,21 @@ defmodule OT.Text.ComponentTest do
 
   describe ".invert/1" do
     test "inverts a delete" do
-      assert Component.invert(%{d: "Foo"}) == %{i: "Foo"}
+      assert Component.invert(-3) == 3
     end
 
     test "inverts an insert" do
-      assert Component.invert(%{i: "Foo"}) == %{d: "Foo"}
+      assert Component.invert(%{i: "Foo"}) == -3
     end
 
     test "inverts a retain" do
-      assert Component.invert(4) == 4
+      assert Component.invert(4) == -4
     end
   end
 
   describe ".length/1" do
     test "determines the length of a delete" do
-      assert Component.length(%{d: "Foo"}) == 3
+      assert Component.length(-3) == 3
     end
 
     test "determines the length of an insert" do
@@ -35,7 +35,7 @@ defmodule OT.Text.ComponentTest do
 
   describe ".type/1" do
     test "determines the type of a delete" do
-      assert Component.type(%{d: "Foo"}) == :delete
+      assert Component.type(-3) == :delete
     end
 
     test "determines the type of an insert" do
@@ -57,7 +57,7 @@ defmodule OT.Text.ComponentTest do
     end
 
     test "joins two deletes" do
-      assert Component.join(%{d: "Foo"}, %{d: "Bar"}) == [%{d: "FooBar"}]
+      assert Component.join(-3, -3) == [-6]
     end
   end
 
@@ -65,7 +65,7 @@ defmodule OT.Text.ComponentTest do
     test "compares two components" do
       comp_a = 4
       comp_b = %{i: "Hello"}
-      comp_c = %{d: "Hello"}
+      comp_c = -5
 
       assert Component.compare(comp_a, comp_b) == :lt
       assert Component.compare(comp_b, comp_a) == :gt
@@ -75,7 +75,7 @@ defmodule OT.Text.ComponentTest do
 
   describe ".split/2" do
     test "splits a delete" do
-      assert Component.split(%{d: "Foo"}, 2) == {%{d: "Fo"}, %{d: "o"}}
+      assert Component.split(-3, 2) == {-2, -1}
     end
 
     test "splits an insert" do
