@@ -31,7 +31,7 @@ defmodule OT.Text.Transformation do
     |> do_transform(side)
   end
 
-  defp transform_loop(op1s, op2s, nil, nil, operation1Prime, operation2Prime, op1_position, op2_position) do
+  defp transform_loop(_, _, nil, nil, operation1Prime, operation2Prime, _, _) do
     [operation1Prime, operation2Prime]
   end
 
@@ -106,7 +106,7 @@ defmodule OT.Text.Transformation do
 
   # op1: delete, op2: retain
   defp transform_loop(op1s, op2s, op1=%{d: _}, op2, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op2) do
-    [minl, op1, op2, op1_posision, op2_position] = cond do
+    [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
         minl = %{d: String.slice(op1.d, -Component.length(op2)..-1)}
         op1  = %{d: String.slice(op1.d, -(Component.length(op1) - Component.length(op2))..-1)}
@@ -122,7 +122,7 @@ defmodule OT.Text.Transformation do
         [minl, op1, op2, op1_position, op2_position]
       true ->
         minl = op1
-        op2  = op2 - Comopnent.length(op1)
+        op2  = op2 - Component.length(op1)
         op1_position = op1_position + 1
         op1 = Enum.at(op1s, op1_position)
         [minl, op1, op2, op1_position, op2_position]
@@ -133,7 +133,7 @@ defmodule OT.Text.Transformation do
 
   # op1: retain, op2: delete
   defp transform_loop(op1s, op2s, op1, op2=%{d: _}, operation1Prime, operation2Prime, op1_position, op2_position) when is_integer(op1) do
-    [minl, op1, op2, op1_posision, op2_position] = cond do
+    [minl, op1, op2, op1_position, op2_position] = cond do
       Component.length(op1) > Component.length(op2) ->
         minl = op2
         op1  = op1 - Component.length(op2)
@@ -159,7 +159,7 @@ defmodule OT.Text.Transformation do
   end
 
   # Unexpected condition
-  defp transform_loop(op1s, op2s, op1, op2, operation1Prime, operation2Prime, op1_position, op2_position) do
+  defp transform_loop(_, _, _, _, _, _, _, _) do
     raise "The two operations aren't compatible or "
   end
 

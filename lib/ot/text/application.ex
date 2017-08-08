@@ -59,7 +59,7 @@ defmodule OT.Text.Application do
   end
 
   defp do_apply(text, [%{d: del} | op], result) do
-    {deleted, text} = String.split_at(text, String.length(del))
+    {_, text} = String.split_at(text, String.length(del))
 
     text
     |> do_apply(op, result)
