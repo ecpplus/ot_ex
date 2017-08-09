@@ -44,7 +44,7 @@ defmodule OT.Text.CompositionTest do
 
   test "composes a delete over a retain" do
     assert Composition.compose([-4], [4]) ==
-           [0]
+           [-4, 4]
   end
 
   test "composes a delete over a delete" do

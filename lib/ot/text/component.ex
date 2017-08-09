@@ -132,8 +132,11 @@ defmodule OT.Text.Component do
   """
   @spec join(t, t) :: Operation.t
   def join(retain_a, retain_b)
-      when is_integer(retain_a) and is_integer(retain_b),
+      when is_integer(retain_a) and is_integer(retain_b) and 0 <= retain_a and 0 <= retain_b,
     do: [retain_a + retain_b]
+  def join(delete_a, delete_b)
+      when is_integer(delete_a) and is_integer(delete_b) and delete_a < 0 and delete_b < 0,
+    do: [delete_a + delete_b]
   def join(%{i: ins_a}, %{i: ins_b}),
     do: [%{i: ins_a <> ins_b}]
   def join(comp_a, comp_b),
