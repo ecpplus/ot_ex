@@ -52,12 +52,13 @@ defmodule OT.Text.CompositionTest do
            [-6]
   end
 
+  require Logger
   test "fuzz test" do
-    # OT.Fuzzer.composition_fuzz(OT.Text, 1_000)
+    OT.Fuzzer.composition_fuzz(OT.Text, 1_000)
   end
 
-  # @tag :slow_fuzz
-  # test "slow fuzz test" do
-    # OT.Fuzzer.composition_fuzz(OT.Text, 10_000)
-  # end
+  @tag :slow_fuzz
+  test "slow fuzz test" do
+    OT.Fuzzer.composition_fuzz(OT.Text, 10_000)
+  end
 end

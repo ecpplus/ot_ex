@@ -4,14 +4,15 @@ defmodule OT.Text.Component do
 
   A component represents a retain or modification of the text:
 
-  - `5`:            Retain 5 characters of the text
-  - `-5`:           Delete 5 characters of the text
-  - `%{i:"Hello"}`: Insert the string "Hello"
+  - `5`:            Retain 5 character codes of the charcodes
+  - `-5`:           Delete 5 character codes of the charcodes
+  - `%{i:[98, 99, 100]}`: Insert charcodes [98, 99, 100]
   """
 
   alias OT.Text
   alias Text.Operation
 
+  # for avoiding conflicting __MODULE__.length
   defp kernel_length(val) do
     k_length = &(Kernel.length/1)
     k_length.(val)
@@ -190,7 +191,7 @@ defmodule OT.Text.Component do
   end
 
   def split(%{i: ins}, index) do
-    {%{i: Enum.slice(ins, 0, index)},
+    {%{i: Enum.slice(ins, 0..index-1)},
      %{i: Enum.slice(ins, index..-1)}}
   end
 
@@ -200,7 +201,6 @@ defmodule OT.Text.Component do
 
   @spec do_random(type, Text.datum) :: t
   defp do_random(:delete, text),
-    # do: -__MODULE__.length(text)
     do: -kernel_length(text)
   defp do_random(:insert, _text),
     do: %{i: Text.init_random(:rand.uniform(16))}

@@ -25,7 +25,6 @@ defmodule OT.Fuzzer do
     end
   end
 
-  require Logger
 
   defmacro invert_fuzz(mod, length \\ 1_000) do
     quote do
@@ -90,14 +89,14 @@ defmodule OT.Fuzzer do
         # op_a_prime = unquote(mod).transform(op_a, op_b, side)
         # op_b_prime = unquote(mod).transform(op_b, op_a, other_side)
 
-        require Logger
-        Logger.debug("--begin--")
-        Logger.debug(inspect op_a)
-        Logger.debug(inspect Enum.at(op_b_prime, 0))
-        Logger.debug("----")
-        Logger.debug(inspect op_b)
-        Logger.debug(inspect Enum.at(op_a_prime, 0))
-        Logger.debug("--end--")
+        # require Logger
+        # Logger.debug("--begin--")
+        # Logger.debug(inspect op_a)
+        # Logger.debug(inspect Enum.at(op_b_prime, 0))
+        # Logger.debug("----")
+        # Logger.debug(inspect op_b)
+        # Logger.debug(inspect Enum.at(op_a_prime, 0))
+        # Logger.debug("--end--")
 
         data_a = initial_value
                  |> unquote(mod).apply!(op_a)

@@ -64,9 +64,7 @@ defmodule OT.Text.Application do
   end
 
   defp do_apply(text, [ret | op], result) when is_integer(ret) and 0 <= ret do
-    # if ret <= String.length(text) do
     if ret <= length(text) do
-      # {retained, text} = String.split_at(text, ret)
       retained = Enum.slice(text, 0..ret-1)
       text     = Enum.slice(text, ret..-1)
 
@@ -78,9 +76,7 @@ defmodule OT.Text.Application do
   end
 
   defp do_apply(text, [del | op], result) when is_integer(del) and del < 0 do
-    # if abs(del) <= String.length(text) do
     if abs(del) <= length(text) do
-      # {_, text} = String.split_at(text, -del)
       text = Enum.slice(text, -del..-1)
 
       text

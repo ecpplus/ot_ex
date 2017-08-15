@@ -67,7 +67,6 @@ defmodule OT.Text.Operation do
   @doc false
   @spec random(OT.Text.datum) :: t
   def random(text) do
-    Logger.debug("random : #{inspect text}")
     text
     |> do_random
     |> Enum.reverse
@@ -80,21 +79,16 @@ defmodule OT.Text.Operation do
   defp do_random([], op), do: op
 
   defp do_random(text, op) do
-    split_index = :rand.uniform(length(text) + 1) - 1
+    # split_index = :rand.uniform(length(text) + 1) - 1
+    split_index = :rand.uniform(length(text))
     # {chunk, new_text} = String.split_at(text, split_index)
-    chunk    = Enum.slice(text, 0..split_index-1)
+    chunk    = Enum.slice(text, 0, split_index)
     new_text = Enum.slice(text, split_index..-1)
     comp = Component.random(chunk)
-    Logger.debug("split_index: #{split_index}, chunk: #{inspect chunk}, new_text: #{inspect new_text}, op: #{inspect [comp | op ]}")
-    Logger.debug("comp : #{inspect comp}")
 
     if Component.type(comp) == :insert do
-      # Logger.debug("chunk: #{inspect chunk}, text: #{inspect text}")
-      Logger.debug("insert")
       do_random(text, [comp | op])
     else
-      # Logger.debug("chunk: #{inspect chunk}, new_text: #{inspect new_text}")
-      Logger.debug("retain or delete")
       do_random(new_text, [comp | op])
     end
   end
