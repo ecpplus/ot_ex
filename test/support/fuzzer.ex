@@ -25,6 +25,8 @@ defmodule OT.Fuzzer do
     end
   end
 
+  require Logger
+
   defmacro invert_fuzz(mod, length \\ 1_000) do
     quote do
       for _ <- 1..unquote(length) do
@@ -36,8 +38,16 @@ defmodule OT.Fuzzer do
         # Apply the edit
         data_a = unquote(mod).apply!(initial_value, op_a)
 
+        Logger.debug("---------------------------")
+        Logger.debug(inspect op_a)
+        Logger.debug("---------------------------")
+
         # Make a subsequent edit
         op_b = unquote(mod).random_op(data_a)
+
+        Logger.debug("---------------------------")
+        Logger.debug(inspect op_b)
+        Logger.debug("---------------------------")
 
         # Apply the edit
         data_a_b = unquote(mod).apply!(data_a, op_b)
@@ -71,19 +81,30 @@ defmodule OT.Fuzzer do
         op_a = unquote(mod).random_op(initial_value)
         op_b = unquote(mod).random_op(initial_value)
 
-        side = Enum.random([:left, :right])
-        other_side = if side == :left, do: :right, else: :left
+        # side = Enum.random([:left, :right])
+        # other_side = if side == :left, do: :right, else: :left
 
         # Transform the edits
-        op_a_prime = unquote(mod).transform(op_a, op_b, side)
-        op_b_prime = unquote(mod).transform(op_b, op_a, other_side)
+        op_a_prime = unquote(mod).transform(op_a, op_b)
+        op_b_prime = unquote(mod).transform(op_b, op_a)
+        # op_a_prime = unquote(mod).transform(op_a, op_b, side)
+        # op_b_prime = unquote(mod).transform(op_b, op_a, other_side)
+
+        require Logger
+        Logger.debug("--begin--")
+        Logger.debug(inspect op_a)
+        Logger.debug(inspect Enum.at(op_b_prime, 0))
+        Logger.debug("----")
+        Logger.debug(inspect op_b)
+        Logger.debug(inspect Enum.at(op_a_prime, 0))
+        Logger.debug("--end--")
 
         data_a = initial_value
                  |> unquote(mod).apply!(op_a)
-                 |> unquote(mod).apply!(op_b_prime)
+                 |> unquote(mod).apply!(Enum.at(op_b_prime, 0))
         data_b = initial_value
                  |> unquote(mod).apply!(op_b)
-                 |> unquote(mod).apply!(op_a_prime)
+                 |> unquote(mod).apply!(Enum.at(op_a_prime, 0))
 
         assert data_a == data_b
       end
