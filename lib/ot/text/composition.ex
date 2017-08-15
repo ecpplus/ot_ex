@@ -14,8 +14,8 @@ defmodule OT.Text.Composition do
 
   ## Example
 
-      iex> OT.Text.Composition.compose([%{i: "Bar"}], [%{i: "Foo"}])
-      [%{i: "FooBar"}]
+      iex> OT.Text.Composition.compose([%{i: [98, 99, 100]}], [%{i: [198, 199, 200]}])
+      [%{i: [198, 199, 200, 98, 99, 100]}]
   """
   @spec compose(Operation.t, Operation.t) :: Operation.t
   def compose(op_a, op_b) do

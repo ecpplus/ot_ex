@@ -40,11 +40,11 @@ defmodule OT.Text.Scanner do
 
   ## Examples
 
-      iex> OT.Text.Scanner.next({[4, %{i: "Foo"}], [2]})
-      {{2, [2, %{i: "Foo"}]}, {2, []}}
+      iex> OT.Text.Scanner.next({[4, %{i: [98, 99, 100]}], [2]})
+      {{2, [2, %{i: [98, 99, 100]}]}, {2, []}}
 
-      iex> OT.Text.Scanner.next({[%{i: "Foo"}], [2]}, :insert)
-      {{%{i: "Foo"}, []}, {2, []}}
+      iex> OT.Text.Scanner.next({[%{i: [98, 99, 100]}], [2]}, :insert)
+      {{%{i: [98, 99, 100]}, []}, {2, []}}
 
       iex> OT.Text.Scanner.next({[-3], [2]})
       {{-2, [-1]}, {2, []}}

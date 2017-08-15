@@ -16,8 +16,8 @@ defmodule OT.Text.Operation do
 
   ## Example
 
-      iex> OT.Text.Operation.append([%{i: "Foo"}], %{i: "Bar"})
-      [%{i: "FooBar"}]
+      iex> OT.Text.Operation.append([%{i: [98, 99, 100]}], %{i: [198, 199, 200]})
+      [%{i: [98, 99, 100, 198, 199, 200]}]
   """
   @spec append(t, Component.t) :: t
   def append([], comp), do: [comp]
@@ -38,7 +38,7 @@ defmodule OT.Text.Operation do
 
   ## Example
 
-      iex> OT.Text.Operation.invert([4, %{i: "Foo"}])
+      iex> OT.Text.Operation.invert([4, %{i: [98, 99, 100]}])
       [-4, -3]
   """
   @spec invert(t) :: t
@@ -49,8 +49,8 @@ defmodule OT.Text.Operation do
 
   ## Example
 
-      iex> OT.Text.Operation.join([3, %{i: "Foo"}], [%{i: "Bar"}, 4])
-      [3, %{i: "FooBar"}, 4]
+      iex> OT.Text.Operation.join([3, %{i: [98, 99, 100]}], [%{i: [198, 199, 200]}, 4])
+      [3, %{i: [98, 99, 100, 198, 199, 200]}, 4]
   """
   @spec join(t, t) :: t
   def join([], op_b), do: op_b
@@ -62,6 +62,8 @@ defmodule OT.Text.Operation do
     |> Kernel.++(tl(op_b))
   end
 
+  require Logger
+
   @doc false
   @spec random(OT.Text.datum) :: t
   def random(text) do
@@ -70,14 +72,18 @@ defmodule OT.Text.Operation do
     |> Enum.reverse
   end
 
-  @spec do_random(String.t, t) :: t
+  @spec do_random([Integer.t], t) :: t
+
   defp do_random(text, op \\ [])
 
-  defp do_random("", op), do: op
+  defp do_random([], op), do: op
 
   defp do_random(text, op) do
-    split_index = :rand.uniform(String.length(text) + 1) - 1
-    {chunk, new_text} = String.split_at(text, split_index)
+    # split_index = :rand.uniform(length(text) + 1) - 1
+    split_index = :rand.uniform(length(text))
+    # {chunk, new_text} = String.split_at(text, split_index)
+    chunk    = Enum.slice(text, 0, split_index)
+    new_text = Enum.slice(text, split_index..-1)
     comp = Component.random(chunk)
 
     if Component.type(comp) == :insert do

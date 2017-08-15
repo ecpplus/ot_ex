@@ -24,10 +24,10 @@ defmodule OT.Text.Application do
 
   ## Examples
 
-      iex> OT.Text.Application.apply("Foo", [3, %{i: " Bar"}])
-      {:ok, "Foo Bar"}
+      iex> OT.Text.Application.apply([1,2,3], [3, %{i: [100, 101, 102, 103]}])
+      {:ok, [1, 2, 3, 100, 101, 102, 103]}
 
-      iex> OT.Text.Application.apply("Foo", [-4])
+      iex> OT.Text.Application.apply([1,2,3], [-4])
       {:error, :delete_too_long}
 
   ## Errors
@@ -52,31 +52,32 @@ defmodule OT.Text.Application do
   end
 
   @spec do_apply(Text.datum, Operation.t, Text.datum) :: apply_result
-  defp do_apply(text, op, result \\ "")
+  defp do_apply(text, op, result \\ [])
 
   defp do_apply(text, [], result) do
-    {:ok, result <> text}
+    {:ok, result ++ text}
   end
 
   defp do_apply(text, [%{i: ins} | op], result) do
     text
-    |> do_apply(op, result <> ins)
+    |> do_apply(op, result ++ ins)
   end
 
   defp do_apply(text, [ret | op], result) when is_integer(ret) and 0 <= ret do
-    if ret <= String.length(text) do
-      {retained, text} = String.split_at(text, ret)
+    if ret <= length(text) do
+      retained = Enum.slice(text, 0..ret-1)
+      text     = Enum.slice(text, ret..-1)
 
       text
-      |> do_apply(op, result <> retained)
+      |> do_apply(op, result ++ retained)
     else
       {:error, :retain_too_long}
     end
   end
 
   defp do_apply(text, [del | op], result) when is_integer(del) and del < 0 do
-    if abs(del) <= String.length(text) do
-      {_, text} = String.split_at(text, -del)
+    if abs(del) <= length(text) do
+      text = Enum.slice(text, -del..-1)
 
       text
       |> do_apply(op, result)
