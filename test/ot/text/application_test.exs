@@ -10,7 +10,7 @@ defmodule OT.Text.ApplicationTest do
   end
 
   test "applies a simple delete component" do
-    assert Application.apply("Foo Barzzz", [7, %{d: "zzz"}]) == {:ok, "Foo Bar"}
+    assert Application.apply("Foo Barzzz", [7, -3]) == {:ok, "Foo Bar"}
   end
 
   test "applies an implicit retain at the end of an operation" do
@@ -23,7 +23,7 @@ defmodule OT.Text.ApplicationTest do
   end
 
   test "returns an error if a delete does not match" do
-    assert Application.apply("Fooz", [3, %{d: "x"}]) ==
-           {:error, :delete_mismatch}
+    assert Application.apply("Fooz", [3, -2]) ==
+           {:error, :delete_too_long}
   end
 end

@@ -55,14 +55,15 @@ defmodule OT.Text.Composition do
 
   # insert / retain
   defp do_compose({{head_a = %{i: _}, tail_a},
-                   {retain_b, tail_b}}, result) when is_integer(retain_b) do
+                   {retain_b, tail_b}}, result) when is_integer(retain_b) and 0 <= retain_b do
     {tail_a, tail_b}
     |> next
     |> do_compose(Operation.append(result, head_a))
   end
 
   # insert / delete
-  defp do_compose({{%{i: _}, tail_a}, {%{d: _}, tail_b}}, result) do
+  defp do_compose({{%{i: _}, tail_a},
+                   {delete_b, tail_b}}, result) when is_integer(delete_b) and delete_b < 0 do
     {tail_a, tail_b}
     |> next
     |> do_compose(result)
@@ -70,7 +71,7 @@ defmodule OT.Text.Composition do
 
   # retain / retain
   defp do_compose({{retain_a, tail_a}, {retain_b, tail_b}}, result)
-       when is_integer(retain_a) and is_integer(retain_b) do
+       when is_integer(retain_a) and is_integer(retain_b) and 0 <= retain_a and 0 <= retain_b do
     {tail_a, tail_b}
     |> next
     |> do_compose(Operation.append(result, retain_a))
@@ -78,25 +79,26 @@ defmodule OT.Text.Composition do
 
   # retain / delete
   defp do_compose({{retain_a, tail_a},
-                   {head_b = %{d: _}, tail_b}}, result)
-       when is_integer(retain_a) do
+                   {head_b, tail_b}}, result)
+       when is_integer(retain_a) and is_integer(head_b) and 0 <= retain_a and head_b < 0 do
     {tail_a, tail_b}
     |> next
     |> do_compose(Operation.append(result, head_b))
   end
 
   # delete / retain
-  defp do_compose({{head_a = %{d: _}, tail_a},
+  defp do_compose({{head_a, tail_a},
                    {retain_b, tail_b}}, result)
-       when is_integer(retain_b) do
+       when is_integer(head_a) and is_integer(retain_b) and head_a < 0 and 0 <= retain_b do
     {tail_a, [retain_b | tail_b]}
     |> next
     |> do_compose(Operation.append(result, head_a))
   end
 
   # delete / delete
-  defp do_compose({{head_a = %{d: _}, tail_a},
-                   {head_b = %{d: _}, tail_b}}, result) do
+  defp do_compose({{head_a, tail_a},
+                   {head_b, tail_b}}, result)
+       when is_integer(head_a) and is_integer(head_b) and head_a < 0 and head_b < 0 do
     {tail_a, [head_b | tail_b]}
     |> next
     |> do_compose(Operation.append(result, head_a))

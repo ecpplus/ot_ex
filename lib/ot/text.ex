@@ -9,7 +9,7 @@ defmodule OT.Text do
   represented thusly:
 
   ```elixir
-  [2, %{d: "z"}, %{i: "o Bar"}]
+  [2, -1, %{i: "o Bar"}]
   ```
 
   Notice that the final retain component, `4` (to skip over " Baz") is
