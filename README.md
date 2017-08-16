@@ -16,7 +16,7 @@ by adding `ot_ex` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ot_ex, "~> 0.1.0"}]
+  [{:ot_ex, git: "https://github.com/ecpplus/ot_ex.git"}]
 end
 ```
 
