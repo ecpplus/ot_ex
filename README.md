@@ -1,8 +1,13 @@
 # OT
 
+[![CircleCI](https://circleci.com/gh/ecpplus/ot_ex.svg?style=svg)](https://circleci.com/gh/ecpplus/ot_ex)
+
 This Elixir library contains an implementation of
 [operational transformation][ot] for strings. It is the same general algorithm
 as [ottypes/text][ot_text], but made invertible.
+
+- Compatible with https://github.com/Operational-Transformation/ot.js and https://github.com/ball-hayden/ot.rb
+- Compatible with Emoji ( https://github.com/ecpplus/elixir-js-string might be useful )
 
 ## Installation
 
