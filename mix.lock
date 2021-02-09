@@ -1,5 +1,7 @@
-%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm"},
-  "credo": {:hex, :credo, "0.8.3", "efe6e9078de64cefdd25d8df7a97292e29e63f42a8988990340eaf1f40d93224", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
-  "dialyxir": {:hex, :dialyxir, "0.4.3", "a4daeebd0107de10d3bbae2ccb6b8905e69544db1ed5fe9148ad27cd4cb2c0cd", [:mix], [], "hexpm"},
-  "earmark": {:hex, :earmark, "1.1.0", "8c2bf85d725050a92042bc1edf362621004d43ca6241c756f39612084e95487f", [:mix], [], "hexpm"},
-  "ex_doc": {:hex, :ex_doc, "0.14.5", "c0433c8117e948404d93ca69411dd575ec6be39b47802e81ca8d91017a0cf83c", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm"}}
+%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
+  "credo": {:hex, :credo, "1.5.5", "e8f422026f553bc3bebb81c8e8bf1932f498ca03339856c7fec63d3faac8424b", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}, {:file_system, "~> 0.2.8", [hex: :file_system, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "dd8623ab7091956a855dc9f3062486add9c52d310dfd62748779c4315d8247de"},
+  "dialyxir": {:hex, :dialyxir, "0.4.3", "a4daeebd0107de10d3bbae2ccb6b8905e69544db1ed5fe9148ad27cd4cb2c0cd", [:mix], [], "hexpm", "32f6fa58c0a3f685b135fa8e48b00f415c46776b077771a49943c9f8fedf67b9"},
+  "earmark": {:hex, :earmark, "1.1.0", "8c2bf85d725050a92042bc1edf362621004d43ca6241c756f39612084e95487f", [:mix], [], "hexpm", "15e3a816bdc53d12f258ea59d0c1fae9a37da2e70a0cb486edad687f65a36f66"},
+  "ex_doc": {:hex, :ex_doc, "0.14.5", "c0433c8117e948404d93ca69411dd575ec6be39b47802e81ca8d91017a0cf83c", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, repo: "hexpm", optional: false]}], "hexpm", "5c30e436a5acfdc2fd8fe6866585fcaf30f434c611d8119d4f3390ced2a550f3"},
+  "file_system": {:hex, :file_system, "0.2.10", "fb082005a9cd1711c05b5248710f8826b02d7d1784e7c3451f9c1231d4fc162d", [:mix], [], "hexpm", "41195edbfb562a593726eda3b3e8b103a309b733ad25f3d642ba49696bf715dc"},
+  "jason": {:hex, :jason, "1.2.2", "ba43e3f2709fd1aa1dce90aaabfd039d000469c05c56f0b8e31978e03fa39052", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "18a228f5f0058ee183f29f9eae0805c6e59d61c3b006760668d8d18ff0d12179"}}
